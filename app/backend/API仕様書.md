@@ -5,7 +5,7 @@
 
 ## 起動方法
 ```bash
-cd バックエンドエンジニア/成果物
+cd app/backend
 npm install
 npm run dev      # http://localhost:3001 で起動（tsx watch）
 ```

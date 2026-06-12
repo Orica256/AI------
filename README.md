@@ -19,16 +19,16 @@
 - バック ：Node.js + Express + SQLite（better-sqlite3）
 
 ## 起動方法
-詳細は各成果物フォルダ内のREADMEを参照。
+詳細は各仕様書（`app/backend/API仕様書.md`・`app/frontend/画面仕様書.md`）を参照。
 
 ```bash
 # 1) バックエンド起動（ターミナル1）
-cd バックエンドエンジニア/成果物
+cd app/backend
 npm install
 npm run dev        # http://localhost:3001
 
 # 2) フロントエンド起動（ターミナル2）
-cd フロントエンドエンジニア/成果物
+cd app/frontend
 npm install
 npm run dev        # http://localhost:5173
 ```
@@ -38,13 +38,16 @@ npm run dev        # http://localhost:5173
 就活コンパス/
 ├── CLAUDE.md                 … プロジェクト全体ルール
 ├── 作業ログ.md                … 全メンバーの作業ログ索引
+├── app/                       … アプリ本体（動くコードはここが正）
+│   ├── backend/               … API（Express + better-sqlite3）
+│   └── frontend/              … UI（React + TypeScript + Vite）
 ├── PM/                        … 企画書・スケジュール・指示書・承認記録
-├── フロントエンドエンジニア/     … UIのソースコード
-├── バックエンドエンジニア/       … APIのソースコード
+├── フロントエンドエンジニア/     … フロントの作業記録（作業ログ・参考資料）
+├── バックエンドエンジニア/       … バックの作業記録（作業ログ・参考資料）
 ├── レビュアー/                 … レビュー報告書・品質保証記録
 └── 秘書/                       … 整理したユーザー意見・議事録
 ```
-各メンバーフォルダは `参考資料/`・`成果物/`・`CLAUDE.md`・`作業ログ.md` を持ちます。
+各メンバーフォルダは `参考資料/`・`成果物/`・`CLAUDE.md`・`作業ログ.md` を持ちます（動くコードは `app/` が正）。
 
 ## チーム
 PM / フロントエンドエンジニア / バックエンドエンジニア / レビュアー / 秘書（AIによる役割分担で開発）
