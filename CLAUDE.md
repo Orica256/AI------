@@ -55,7 +55,8 @@
 - コミットの author/committer は **`Orica256 <hatopal1001@gmail.com>`**。
 - コミットメッセージ・PR本文に **Claude Code / Anthropic の表記（`Co-Authored-By: Claude ...`、"Generated with Claude Code" 等）を付けない**。
 
-### Codex 連携（コーディング外部委譲）
-- 方針：**コーディングは Codex（ChatGPT Pro）、設計・レビュー・ドキュメント・進捗管理は Claude**。
-- 詳細・セットアップ手順は [`Codex連携案.md`](Codex連携案.md) を参照（現状は**提案段階・未導入**）。
-- `app/` のインターフェース（API契約・型）の“正”は Claude が確定し、Codex は中身を実装する。
+### AI の使い分け（既定＝Claude）
+- **基本はすべて Claude が行う**（設計・実装・レビュー・ドキュメント・進捗管理）。
+- **Codex でのコーディングは、ユーザーが明示的に「Codex を使う」と指示したときのみ**行う。既定では使わない。
+- 理由：小〜中タスクでは委譲の固定オーバーヘッド（リポジトリ全読み込み）とスコープ逸脱リスクが大きく、Claude 直接の方が低コスト・安全（2026-06-13 実測比較で確認。詳細は [`Codex連携案.md`](Codex連携案.md)）。
+- Codex を使う場合の手順：`app/` の API契約・型の“正”は Claude が確定 → `scripts/codex-task.ps1` 経由で委譲（中身のみ実装させる）→ **Claude が必ず差分をレビュー**し、author=Orica256 でコミットする。
