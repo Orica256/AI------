@@ -1,4 +1,23 @@
-import type { Company, CompanyDetail, CompanyEvent, Dashboard } from './types';
+import type { Company, CompanyDetail, CompanyEvent, Dashboard, Task } from './types';
+
+// エクスポート/インポートのデータ束（ローカルJSONバックアップ）
+export interface ExportBundle {
+  version: number;
+  exportedAt?: string;
+  companies: Company[];
+  events: CompanyEvent[];
+  tasks: Task[];
+}
+
+// 全イベント（カレンダー用・企業名付き）
+export interface AllEvent {
+  id: number;
+  company_id: number;
+  title: string;
+  date: string;
+  done: number;
+  company_name: string;
+}
 
 // Viteプロキシ経由で /api をバックエンド(3001)へ転送
 const BASE = '/api';
@@ -43,4 +62,20 @@ export const api = {
 
   deleteEvent: (id: number) =>
     request<{ ok: true }>(`/events/${id}`, { method: 'DELETE' }),
+
+  // カレンダー用：全イベント（企業名付き）
+  listAllEvents: () => request<AllEvent[]>('/events'),
+
+  // ToDo（タスク）
+  addTask: (companyId: number, data: { title: string }) =>
+    request<Task>(`/companies/${companyId}/tasks`, { method: 'POST', body: JSON.stringify(data) }),
+  updateTask: (id: number, data: Partial<Task>) =>
+    request<Task>(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteTask: (id: number) =>
+    request<{ ok: true }>(`/tasks/${id}`, { method: 'DELETE' }),
+
+  // データ入出力（ローカルバックアップ）
+  exportData: () => request<ExportBundle>('/export'),
+  importData: (bundle: ExportBundle) =>
+    request<{ ok: true }>('/import', { method: 'POST', body: JSON.stringify(bundle) }),
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { STATUSES, type Company, type Status } from '../types';
+import DeadlineBadge from './DeadlineBadge';
 
 interface Props {
   onOpenCompany: (id: number) => void;
@@ -168,7 +169,7 @@ export function CompanyList({ onOpenCompany }: Props) {
                   <span className="badge">{c.status}</span>
                 </td>
                 <td>{'★'.repeat(c.priority)}</td>
-                <td>{c.deadline || '-'}</td>
+                <td><DeadlineBadge deadline={c.deadline} /></td>
                 <td>{c.eventCount ? `${c.eventCount}件` : '-'}</td>
               </tr>
             ))}

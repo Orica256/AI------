@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api, AllEvent } from '../api';
 import { Company } from '../types';
 
@@ -44,7 +44,7 @@ export default function CalendarView({ onSelect }: Props) {
       (map[key] = map[key] || []).push(item);
     };
     for (const e of events) {
-      push(e.date, { kind: 'event', label: e.type, companyId: e.company_id, companyName: e.company_name });
+      push(e.date, { kind: 'event', label: e.title, companyId: e.company_id, companyName: e.company_name });
     }
     for (const c of companies) {
       if (c.deadline) {

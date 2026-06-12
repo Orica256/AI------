@@ -50,6 +50,15 @@ db.exec(`
     done       INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS tasks (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id INTEGER NOT NULL,
+    title      TEXT NOT NULL,
+    done       INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  );
 `);
 
 // 初回のみサンプルデータを投入（使い方の例示）

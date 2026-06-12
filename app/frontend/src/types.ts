@@ -10,6 +10,15 @@ export const STATUSES = [
 ] as const;
 export type Status = (typeof STATUSES)[number];
 
+// 志望度（1〜5）の表示ラベル
+export const PRIORITY_LABELS: Record<number, string> = {
+  1: '★1',
+  2: '★2',
+  3: '★3',
+  4: '★4',
+  5: '★5',
+};
+
 export interface Company {
   id: number;
   name: string;
@@ -32,8 +41,17 @@ export interface CompanyEvent {
   done: number;
 }
 
+export interface Task {
+  id: number;
+  company_id: number;
+  title: string;
+  done: number;
+  created_at: string;
+}
+
 export interface CompanyDetail extends Company {
   events: CompanyEvent[];
+  tasks: Task[];
 }
 
 export interface Dashboard {

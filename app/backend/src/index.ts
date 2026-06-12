@@ -37,7 +37,8 @@ app.get('/api/companies/:id', (req: Request, res: Response) => {
   const company = db.prepare('SELECT * FROM companies WHERE id = ?').get(req.params.id);
   if (!company) return res.status(404).json({ error: '企業が見つかりません' });
   const events = db.prepare('SELECT * FROM events WHERE company_id = ? ORDER BY date ASC').all(req.params.id);
-  res.json({ ...company, events });
+  const tasks = db.prepare('SELECT * FROM tasks WHERE company_id = ? ORDER BY done ASC, id ASC').all(req.params.id);
+  res.json({ ...company, events, tasks });
 });
 
 // ---- 企業：作成 ----
@@ -154,6 +155,53 @@ app.delete('/api/events/:id', (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+// ---- ToDo（タスク）：追加 ----
+app.post('/api/companies/:id/tasks', (req: Request, res: Response) => {
+  const company = db.prepare('SELECT id FROM companies WHERE id = ?').get(req.params.id);
+  if (!company) return res.status(404).json({ error: '企業が見つかりません' });
+  const { title } = req.body ?? {};
+  if (typeof title !== 'string' || title.trim() === '')
+    return res.status(400).json({ error: 'タスク名は必須です' });
+  const info = db
+    .prepare('INSERT INTO tasks (company_id, title, done, created_at) VALUES (?, ?, 0, ?)')
+    .run(req.params.id, title.trim(), new Date().toISOString());
+  const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(info.lastInsertRowid);
+  res.status(201).json(created);
+});
+
+// ---- ToDo（タスク）：更新（完了切替・改名） ----
+app.put('/api/tasks/:id', (req: Request, res: Response) => {
+  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id) as any;
+  if (!existing) return res.status(404).json({ error: 'タスクが見つかりません' });
+  const { title, done } = req.body ?? {};
+  if (title !== undefined && (typeof title !== 'string' || title.trim() === ''))
+    return res.status(400).json({ error: 'タスク名は必須です' });
+  db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?').run(
+    title !== undefined ? title.trim() : existing.title,
+    done !== undefined ? (done ? 1 : 0) : existing.done,
+    req.params.id
+  );
+  const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+  res.json(updated);
+});
+
+// ---- ToDo（タスク）：削除 ----
+app.delete('/api/tasks/:id', (req: Request, res: Response) => {
+  const info = db.prepare('DELETE FROM tasks WHERE id = ?').run(req.params.id);
+  if (info.changes === 0) return res.status(404).json({ error: 'タスクが見つかりません' });
+  res.json({ ok: true });
+});
+
+// ---- イベント：全件（カレンダー用・企業名付き） ----
+app.get('/api/events', (_req: Request, res: Response) => {
+  const rows = db.prepare(`
+    SELECT e.id, e.company_id, e.title, e.date, e.done, c.name AS company_name
+    FROM events e JOIN companies c ON e.company_id = c.id
+    ORDER BY e.date ASC
+  `).all();
+  res.json(rows);
+});
+
 // ---- ダッシュボード ----
 app.get('/api/dashboard', (_req: Request, res: Response) => {
   // ステータス別件数
@@ -188,6 +236,78 @@ app.get('/api/dashboard', (_req: Request, res: Response) => {
     .all(todayStr, in7Str);
 
   res.json({ total: total.c, byStatus, upcomingDeadlines, upcomingEvents });
+});
+
+// ---- データ：エクスポート（ローカルJSONバックアップ） ----
+app.get('/api/export', (_req: Request, res: Response) => {
+  const companies = db.prepare('SELECT * FROM companies ORDER BY id ASC').all();
+  const events = db.prepare('SELECT * FROM events ORDER BY id ASC').all();
+  const tasks = db.prepare('SELECT * FROM tasks ORDER BY id ASC').all();
+  res.json({ version: 1, exportedAt: new Date().toISOString(), companies, events, tasks });
+});
+
+// ---- データ：インポート（全置換・トランザクション） ----
+app.post('/api/import', (req: Request, res: Response) => {
+  const { companies, events, tasks } = req.body ?? {};
+  if (!Array.isArray(companies) || !Array.isArray(events))
+    return res.status(400).json({ error: 'companies と events の配列が必要です' });
+  const taskRows = Array.isArray(tasks) ? tasks : [];
+  try {
+    const tx = db.transaction(() => {
+      // 子テーブルから削除（FK整合）
+      db.prepare('DELETE FROM tasks').run();
+      db.prepare('DELETE FROM events').run();
+      db.prepare('DELETE FROM companies').run();
+
+      const insC = db.prepare(`
+        INSERT INTO companies (id, name, industry, status, priority, applied_date, deadline, memo, created_at, updated_at)
+        VALUES (@id, @name, @industry, @status, @priority, @applied_date, @deadline, @memo, @created_at, @updated_at)
+      `);
+      for (const c of companies) {
+        if (!c || typeof c.name !== 'string' || c.name.trim() === '')
+          throw new Error('企業データが不正です（nameは必須）');
+        const now = new Date().toISOString();
+        insC.run({
+          id: c.id ?? null,
+          name: c.name,
+          industry: c.industry ?? null,
+          status: isStatus(c.status) ? c.status : '気になる',
+          priority: Number(c.priority) || 3,
+          applied_date: c.applied_date ?? null,
+          deadline: c.deadline ?? null,
+          memo: c.memo ?? null,
+          created_at: c.created_at ?? now,
+          updated_at: c.updated_at ?? now,
+        });
+      }
+
+      const insE = db.prepare('INSERT INTO events (id, company_id, title, date, done) VALUES (@id, @company_id, @title, @date, @done)');
+      for (const e of events) {
+        insE.run({
+          id: e?.id ?? null,
+          company_id: Number(e?.company_id),
+          title: String(e?.title ?? ''),
+          date: String(e?.date ?? ''),
+          done: e?.done ? 1 : 0,
+        });
+      }
+
+      const insT = db.prepare('INSERT INTO tasks (id, company_id, title, done, created_at) VALUES (@id, @company_id, @title, @done, @created_at)');
+      for (const t of taskRows) {
+        insT.run({
+          id: t?.id ?? null,
+          company_id: Number(t?.company_id),
+          title: String(t?.title ?? ''),
+          done: t?.done ? 1 : 0,
+          created_at: t?.created_at ?? new Date().toISOString(),
+        });
+      }
+    });
+    tx();
+  } catch (e: any) {
+    return res.status(400).json({ error: 'インポートに失敗しました: ' + (e?.message ?? '不明なエラー') });
+  }
+  res.json({ ok: true });
 });
 
 // ---- ヘルスチェック ----

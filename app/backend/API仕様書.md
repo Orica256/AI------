@@ -47,3 +47,13 @@ curl http://localhost:3001/api/dashboard
 - `400`：バリデーション違反 `{ "error": "..." }`
 - `404`：対象なし `{ "error": "..." }`
 - `500`：サーバー内部エラー
+
+## 第3サイクル 追加API（2026-06-12）
+- `GET /api/events` … 全イベント（企業名 `company_name` 付き）。カレンダー用。
+- `GET /api/companies/:id` … レスポンスに `tasks`（ToDo配列）を追加。
+- `POST /api/companies/:id/tasks` … ToDo追加（body: `{ title }`）。
+- `PUT /api/tasks/:id` … ToDo更新（`{ title?, done? }`）。
+- `DELETE /api/tasks/:id` … ToDo削除。
+- `GET /api/export` … 全データ（companies/events/tasks）をJSONで返す（バックアップ）。
+- `POST /api/import` … JSONを受け取り全置換（トランザクション）。body: `{ companies[], events[], tasks[] }`。
+> tasksテーブル：id, company_id, title, done, created_at。companies削除時に CASCADE。

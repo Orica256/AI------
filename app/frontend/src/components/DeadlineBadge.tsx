@@ -1,4 +1,3 @@
-import React from 'react';
 import { deadlineInfo } from '../utils/deadline';
 
 interface Props {

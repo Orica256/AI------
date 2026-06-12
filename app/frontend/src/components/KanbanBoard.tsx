@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Company, STATUSES, Status, PRIORITY_LABELS } from '../types';
 import { deadlineInfo } from '../utils/deadline';

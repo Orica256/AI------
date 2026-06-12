@@ -13,6 +13,7 @@ export function CompanyDetail({ id, onBack }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<CompanyDetailData>>({});
   const [eventForm, setEventForm] = useState({ title: '', date: '' });
+  const [taskTitle, setTaskTitle] = useState('');
 
   const load = () => {
     api
@@ -77,6 +78,28 @@ export function CompanyDetail({ id, onBack }: Props) {
 
   const removeEvent = async (eventId: number) => {
     await api.deleteEvent(eventId);
+    load();
+  };
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.addTask(id, { title: taskTitle });
+      setTaskTitle('');
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const toggleTask = async (taskId: number, done: number) => {
+    await api.updateTask(taskId, { done: done ? 0 : 1 });
+    load();
+  };
+
+  const removeTask = async (taskId: number) => {
+    await api.deleteTask(taskId);
     load();
   };
 
@@ -226,6 +249,39 @@ export function CompanyDetail({ id, onBack }: Props) {
             type="date"
             value={eventForm.date}
             onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+            required
+          />
+          <button type="submit">追加</button>
+        </form>
+      </section>
+
+      <section className="card">
+        <h3>ToDo（やること）</h3>
+        {company.tasks.length === 0 ? (
+          <p className="empty">タスクはまだありません。</p>
+        ) : (
+          <ul className="event-list">
+            {company.tasks.map((t) => (
+              <li key={t.id} className={t.done ? 'done' : ''}>
+                <input
+                  type="checkbox"
+                  checked={!!t.done}
+                  onChange={() => toggleTask(t.id, t.done)}
+                />
+                <span className="event-title">{t.title}</span>
+                <button className="link danger" onClick={() => removeTask(t.id)}>
+                  削除
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form className="event-form" onSubmit={handleAddTask}>
+          <input
+            placeholder="やること（例：ES提出、面接対策）"
+            value={taskTitle}
+            onChange={(e) => setTaskTitle(e.target.value)}
             required
           />
           <button type="submit">追加</button>

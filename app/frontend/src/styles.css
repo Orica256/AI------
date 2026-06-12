@@ -378,6 +378,225 @@ button.danger {
   color: var(--muted);
 }
 
+/* ヘッダーのデータ操作ボタン */
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+.header-actions button {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.header-actions button:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* 締切バッジ（残日数の色分け） */
+.muted {
+  color: var(--muted);
+}
+
+.deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: #eef2ff;
+  color: var(--primary-dark);
+}
+.deadline-badge .dl-date {
+  font-weight: bold;
+}
+.deadline-badge.level-overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.deadline-badge.level-today {
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: bold;
+}
+.deadline-badge.level-soon {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.deadline-badge.level-warn {
+  background: #fef9c3;
+  color: #a16207;
+}
+.deadline-badge.level-normal {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* 志望度ラベル */
+.prio {
+  font-size: 12px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+/* カンバン */
+.kanban-board {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.kanban-col {
+  flex: 0 0 180px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  min-height: 120px;
+}
+.kanban-col.drop-over {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--muted);
+  padding: 4px 6px 8px;
+}
+.kanban-count {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+.kanban-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kanban-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: grab;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.kanban-card:active {
+  cursor: grabbing;
+}
+.kanban-card-name {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.kanban-empty {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* カレンダー */
+.calendar-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.calendar-head h2 {
+  margin: 0;
+  min-width: 140px;
+  text-align: center;
+}
+.calendar-head button {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.calendar-head .today-btn {
+  margin-left: auto;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-weekday {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.cal-cell {
+  min-height: 78px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+}
+.cal-cell.out-month {
+  background: var(--bg);
+  color: var(--muted);
+}
+.cal-cell.is-today {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary) inset;
+}
+.cal-date {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.cal-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cal-item {
+  border: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-event {
+  background: #e0e7ff;
+  color: var(--primary-dark);
+}
+.cal-deadline {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 @media (max-width: 600px) {
   .status-grid {
     grid-template-columns: repeat(2, 1fr);
