@@ -1,6 +1,6 @@
 # Codex × Claude 連携案（コーディング外部委譲）
 
-> ステータス：**提案段階（未導入）**。実装はまだ。別PCでも参照できるよう本ファイルに記録。
+> ステータス：**フェーズ0–1 導入済み**（2026-06-12 実機確認・セットアップ完了）。フェーズ3（試運転で本採用判断）は未実施。
 > 最終更新：2026-06-12
 
 ## 目的
@@ -55,6 +55,32 @@ Claude が裏で：仕様を書く → `codex` を Bash 経由で起動して実
 2. 同時編集の競合 → 必ず逐次（実装→レビュー）。並行させない。
 3. 規約のズレ → Codex にも `CLAUDE.md`（無料/ローカル・命名規則）を毎回渡す。
 4. レビューにも読みトークンは要る → 差分中心で最小化。
+
+## 実機セットアップ記録（2026-06-12）
+このPC（Windows 11 / PowerShell）で前提確認とフェーズ1の整備を実施。
+
+### フェーズ0：前提確認（結果＝全クリア）
+- ✅ **Codex CLI 導入**：`npm i -g @openai/codex` → `codex-cli 0.139.0`（node v24.13.1 / npm 11.8.0）。
+- ✅ **ログイン済み**：`codex login status` → "Logged in using ChatGPT"。
+- ✅ **ヘッドレス実行あり**：`codex exec`（非対話）が存在。`--sandbox read-only|workspace-write|danger-full-access`、
+  `--cd <DIR>`、`-c model_reasoning_effort=...` 等を確認。`approval: never` で確認なし実行が可能。
+- ✅ **疎通テスト成功**：read-only で最小プロンプトを投げ応答を取得（model = gpt-5.5）。
+  → **手動リレーへの格下げは不要。1ターミナル自動運用が可能。**
+
+### フェーズ1：呼び出し経路（整備済み）
+- `scripts/codex-task.ps1` … ハンドオフ仕様ファイルを受け取り、規約ヘッダを添えて `codex exec` を起動するラッパー。
+  既定は `--sandbox workspace-write`（リポジトリ内のみ書込）/ `model_reasoning_effort=medium`（トークン節約）。実行ログは `scripts/logs/` に保存。
+- `scripts/handoff-template.md` … 1タスク=1ファイルの作業指示テンプレ（背景／対象／確定API契約・型／作業内容／完了条件／制約）。
+- 規約のズレ防止（リスク3）：ラッパーが「無料・ローカル／型・API契約は変更不可／app/ にのみ実装／コミットしない」をプロンプト先頭に毎回付与。
+
+### コスト注意
+- `~/.codex/config.toml` の既定は `model_reasoning_effort = "high"`（疎通テストで約1.9万トークン消費）。
+  ラッパーは既定 `medium` に下げ、難設計のみ `-Effort high` を渡す運用とする。
+
+### 残り（次にやる）
+- フェーズ2：検証（tsc / 起動 / curl）を Codex 側へ寄せ、Claude は結果ログのみ確認、を運用で固定。
+- フェーズ3：極小タスク（1エンドポイント追加など）で1周し、トークンの出方・手戻り・競合を見て本採用を判断。
+- 任意：`.claude/settings.json` に codex 実行を許可登録して権限プロンプトを抑制（書式を確認のうえ別途）。
 
 ## 既知の注意（共有の落とし穴）
 - Claude Code の**メモリ（`~/.claude/...`）はPCローカルで、gitに入らない＝別PCに引き継がれない**。

@@ -1,0 +1,6 @@
+# Codex 委譲の実行ログ（自動生成・コミット不要）
+scripts/logs/
+
+# OS / エディタ
+Thumbs.db
+.DS_Store
