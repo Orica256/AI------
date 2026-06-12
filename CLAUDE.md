@@ -45,3 +45,17 @@
 - 命名：変数・関数は camelCase、型・コンポーネントは PascalCase。
 - コメント：日本語可。意図が分かりにくい箇所のみ簡潔に。
 - 1ファイル1責務を意識し、肥大化させない。
+
+## 運用ルール（全PC共通・恒久）
+> ⚠️ Claude Code のメモリ（`~/.claude/...`）は**そのPCローカルで、gitに入らない＝別PCに引き継がれない**。
+> 恒久ルールは必ず本 `CLAUDE.md` 等の**リポジトリ内ファイル**に書くこと。
+
+### Git・コミット
+- **段階ごとにコミット＆プッシュ**する。多段タスクは各区切り（1機能／1修正）で都度コミットし、最後に一括にしない。
+- コミットの author/committer は **`Orica256 <hatopal1001@gmail.com>`**。
+- コミットメッセージ・PR本文に **Claude Code / Anthropic の表記（`Co-Authored-By: Claude ...`、"Generated with Claude Code" 等）を付けない**。
+
+### Codex 連携（コーディング外部委譲）
+- 方針：**コーディングは Codex（ChatGPT Pro）、設計・レビュー・ドキュメント・進捗管理は Claude**。
+- 詳細・セットアップ手順は [`Codex連携案.md`](Codex連携案.md) を参照（現状は**提案段階・未導入**）。
+- `app/` のインターフェース（API契約・型）の“正”は Claude が確定し、Codex は中身を実装する。
