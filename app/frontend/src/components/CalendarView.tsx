@@ -109,7 +109,10 @@ export default function CalendarView({ onSelect }: Props) {
                     onClick={() => onSelect(it.companyId)}
                     title={`${it.companyName}：${it.label}`}
                   >
-                    {it.kind === 'deadline' ? '⏰' : it.kind === 'task' ? '✅' : '📌'} {it.companyName}
+                    <span className="ci-main">
+                      {it.kind === 'deadline' ? '⏰' : it.kind === 'task' ? '✅' : '📌'} {it.label}
+                    </span>
+                    <span className="ci-sub">{it.companyName}</span>
                   </button>
                 ))}
               </div>
