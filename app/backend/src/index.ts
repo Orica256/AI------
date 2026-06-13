@@ -207,6 +207,17 @@ app.get('/api/events', (_req: Request, res: Response) => {
   res.json(rows);
 });
 
+// ---- ToDo：全件（カレンダー用・期日ありのみ・企業名付き） ----
+app.get('/api/tasks', (_req: Request, res: Response) => {
+  const rows = db.prepare(`
+    SELECT t.id, t.company_id, t.title, t.due_date, t.done, c.name AS company_name
+    FROM tasks t JOIN companies c ON t.company_id = c.id
+    WHERE t.due_date IS NOT NULL
+    ORDER BY t.due_date ASC
+  `).all();
+  res.json(rows);
+});
+
 // ---- ダッシュボード ----
 app.get('/api/dashboard', (_req: Request, res: Response) => {
   // ステータス別件数

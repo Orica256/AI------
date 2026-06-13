@@ -40,7 +40,7 @@ curl http://localhost:3001/api/dashboard
 
 ## バリデーション
 - `name` / `title`：空文字不可。
-- `status`：定義済みenumのみ（気になる/エントリー/ES提出/一次面接/二次面接/最終面接/内定/お祈り）。
+- `status`：定義済みenumのみ（気になる/インターン応募/インターン選考/インターン参加/エントリー/ES提出/一次面接/二次面接/最終面接/内定/お祈り）。
 - 日付：`YYYY-MM-DD` 形式（空はnull許容、ただしイベント日付は必須）。
 
 ## エラー応答
@@ -53,6 +53,7 @@ curl http://localhost:3001/api/dashboard
 - `GET /api/companies/:id` … レスポンスに `tasks`（ToDo配列）を追加。
 - `POST /api/companies/:id/tasks` … ToDo追加（body: `{ title, due_date? }`。due_dateは任意・`YYYY-MM-DD` or null）。
 - `PUT /api/tasks/:id` … ToDo更新（`{ title?, done?, due_date? }`）。
+- `GET /api/tasks` … 期日（due_date）付きの全ToDoを企業名 `company_name` 付きで返す（カレンダー用）。
 - `DELETE /api/tasks/:id` … ToDo削除。
 - `GET /api/export` … 全データ（companies/events/tasks）をJSONで返す（バックアップ）。
 - `POST /api/import` … JSONを受け取り全置換（トランザクション）。body: `{ companies[], events[], tasks[] }`。
