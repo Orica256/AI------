@@ -83,6 +83,13 @@ Step 'GET /api/companies/:id（tasks 2件・due_date確認）' {
   if ($d.tasks.Count -lt 2) { throw 'tasks が2件未満' }
 }
 
+Step 'GET /api/tasks（カレンダー用・期日付き全ToDo）' {
+  $all = Invoke-RestMethod -Uri "$BaseUrl/api/tasks" -Method Get
+  $mine = @($all | Where-Object { $_.company_id -eq $script:createdId })
+  if ($mine.Count -lt 1) { throw '期日付きToDoが返らない' }
+  if (-not $mine[0].company_name) { throw 'company_name が無い' }
+}
+
 Step 'GET /api/dashboard' {
   $dash = Invoke-RestMethod -Uri "$BaseUrl/api/dashboard" -Method Get
   if ($null -eq $dash.total) { throw 'total が欠落' }
