@@ -102,7 +102,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="main">
+      <main className={view.name === 'kanban' ? 'main wide' : 'main'}>
         {view.name === 'dashboard' && (
           <Dashboard onOpenCompany={(id) => setView({ name: 'detail', id })} />
         )}

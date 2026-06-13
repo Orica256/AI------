@@ -15,6 +15,7 @@ export function CompanyDetail({ id, onBack }: Props) {
   const [form, setForm] = useState<Partial<CompanyDetailData>>({});
   const [eventForm, setEventForm] = useState({ title: '', date: '' });
   const [taskTitle, setTaskTitle] = useState('');
+  const [taskDue, setTaskDue] = useState('');
 
   const load = () => {
     api
@@ -86,8 +87,9 @@ export function CompanyDetail({ id, onBack }: Props) {
     e.preventDefault();
     setError(null);
     try {
-      await api.addTask(id, { title: taskTitle });
+      await api.addTask(id, { title: taskTitle, due_date: taskDue || null });
       setTaskTitle('');
+      setTaskDue('');
       load();
     } catch (err) {
       setError((err as Error).message);
@@ -272,6 +274,7 @@ export function CompanyDetail({ id, onBack }: Props) {
                   onChange={() => toggleTask(t.id, t.done)}
                 />
                 <span className="event-title">{t.title}</span>
+                {t.due_date && <span className="date">期日 {t.due_date}</span>}
                 <button className="link danger" onClick={() => removeTask(t.id)}>
                   削除
                 </button>
@@ -286,6 +289,12 @@ export function CompanyDetail({ id, onBack }: Props) {
             value={taskTitle}
             onChange={(e) => setTaskTitle(e.target.value)}
             required
+          />
+          <input
+            type="date"
+            value={taskDue}
+            onChange={(e) => setTaskDue(e.target.value)}
+            title="期日（任意）"
           />
           <button type="submit">追加</button>
         </form>

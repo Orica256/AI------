@@ -67,7 +67,7 @@ export const api = {
   listAllEvents: () => request<AllEvent[]>('/events'),
 
   // ToDo（タスク）
-  addTask: (companyId: number, data: { title: string }) =>
+  addTask: (companyId: number, data: { title: string; due_date?: string | null }) =>
     request<Task>(`/companies/${companyId}/tasks`, { method: 'POST', body: JSON.stringify(data) }),
   updateTask: (id: number, data: Partial<Task>) =>
     request<Task>(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

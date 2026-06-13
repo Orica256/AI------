@@ -46,6 +46,7 @@ export interface Task {
   company_id: number;
   title: string;
   done: number;
+  due_date: string | null;
   created_at: string;
 }
 

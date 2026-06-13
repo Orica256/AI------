@@ -4,7 +4,14 @@ import { STATUSES, type Company, type Status } from '../types';
 import DeadlineBadge from './DeadlineBadge';
 import { daysUntil } from '../utils/deadline';
 
-type SortKey = 'default' | 'deadline' | 'priority';
+type SortKey = 'default' | 'deadline' | 'priority' | 'name-asc' | 'name-desc';
+
+// ひらがな→カタカナに正規化し、かな表記ゆれ（ひら/カタ）を吸収する
+function normalizeKana(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[ぁ-ゖ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+}
 
 interface Props {
   onOpenCompany: (id: number) => void;
@@ -56,11 +63,13 @@ export function CompanyList({ onOpenCompany }: Props) {
   // 検索（企業名・業界の部分一致）と並べ替えはクライアント側で適用する
   const visible = companies
     .filter((c) => {
-      const k = keyword.trim().toLowerCase();
+      const k = normalizeKana(keyword.trim());
       if (!k) return true;
-      return c.name.toLowerCase().includes(k) || (c.industry ?? '').toLowerCase().includes(k);
+      return normalizeKana(c.name).includes(k) || normalizeKana(c.industry ?? '').includes(k);
     })
     .sort((a, b) => {
+      if (sortKey === 'name-asc') return a.name.localeCompare(b.name, 'ja');
+      if (sortKey === 'name-desc') return b.name.localeCompare(a.name, 'ja');
       if (sortKey === 'priority') return b.priority - a.priority;
       if (sortKey === 'deadline') {
         const da = daysUntil(a.deadline);
@@ -183,6 +192,8 @@ export function CompanyList({ onOpenCompany }: Props) {
           <option value="default">並び順：デフォルト</option>
           <option value="deadline">締切が近い順</option>
           <option value="priority">志望度が高い順</option>
+          <option value="name-asc">企業名 昇順（あ→ん）</option>
+          <option value="name-desc">企業名 降順（ん→あ）</option>
         </select>
       </div>
 
