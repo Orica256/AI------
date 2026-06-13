@@ -1,4 +1,4 @@
-import type { Company, CompanyDetail, CompanyEvent, Dashboard, Task } from './types';
+import type { Company, CompanyDetail, CompanyEvent, Dashboard, EsTemplate, Stats, Task } from './types';
 
 // エクスポート/インポートのデータ束（ローカルJSONバックアップ）
 export interface ExportBundle {
@@ -7,6 +7,7 @@ export interface ExportBundle {
   companies: Company[];
   events: CompanyEvent[];
   tasks: Task[];
+  esTemplates?: EsTemplate[];
 }
 
 // 全イベント（カレンダー用・企業名付き）
@@ -47,6 +48,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   getDashboard: () => request<Dashboard>('/dashboard'),
 
+  getStats: () => request<Stats>('/stats'),
+
   listCompanies: (status?: string) =>
     request<Company[]>(`/companies${status ? `?status=${encodeURIComponent(status)}` : ''}`),
 
@@ -86,6 +89,14 @@ export const api = {
     request<Task>(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTask: (id: number) =>
     request<{ ok: true }>(`/tasks/${id}`, { method: 'DELETE' }),
+
+  listEsTemplates: () => request<EsTemplate[]>('/es-templates'),
+  createEsTemplate: (data: Pick<EsTemplate, 'category' | 'title' | 'body'>) =>
+    request<EsTemplate>('/es-templates', { method: 'POST', body: JSON.stringify(data) }),
+  updateEsTemplate: (id: number, data: Partial<Pick<EsTemplate, 'category' | 'title' | 'body'>>) =>
+    request<EsTemplate>(`/es-templates/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteEsTemplate: (id: number) =>
+    request<{ ok: true }>(`/es-templates/${id}`, { method: 'DELETE' }),
 
   // データ入出力（ローカルバックアップ）
   exportData: () => request<ExportBundle>('/export'),

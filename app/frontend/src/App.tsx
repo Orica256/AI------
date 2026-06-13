@@ -5,12 +5,16 @@ import { CompanyList } from './components/CompanyList';
 import { CompanyDetail } from './components/CompanyDetail';
 import KanbanBoard from './components/KanbanBoard';
 import CalendarView from './components/CalendarView';
+import { EsTemplates } from './components/EsTemplates';
+import { Stats } from './components/Stats';
 
 type View =
   | { name: 'dashboard' }
   | { name: 'list' }
   | { name: 'kanban' }
   | { name: 'calendar' }
+  | { name: 'es' }
+  | { name: 'stats' }
   | { name: 'detail'; id: number };
 
 export function App() {
@@ -85,6 +89,18 @@ export function App() {
           >
             カレンダー
           </button>
+          <button
+            className={view.name === 'es' ? 'active' : ''}
+            onClick={() => setView({ name: 'es' })}
+          >
+            ES
+          </button>
+          <button
+            className={view.name === 'stats' ? 'active' : ''}
+            onClick={() => setView({ name: 'stats' })}
+          >
+            統計
+          </button>
         </nav>
         <div className="header-actions">
           <button onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>
@@ -115,6 +131,8 @@ export function App() {
         {view.name === 'calendar' && (
           <CalendarView onSelect={(id) => setView({ name: 'detail', id })} />
         )}
+        {view.name === 'es' && <EsTemplates />}
+        {view.name === 'stats' && <Stats />}
         {view.name === 'detail' && (
           <CompanyDetail id={view.id} onBack={() => setView({ name: 'list' })} />
         )}

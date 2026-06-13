@@ -13,6 +13,9 @@ export const STATUSES = [
 ] as const;
 export type Status = (typeof STATUSES)[number];
 
+export const ES_CATEGORIES = ['自己PR', '志望動機', 'ガクチカ', '長所・短所', '逆質問'] as const;
+export type EsCategory = (typeof ES_CATEGORIES)[number];
+
 // 志望度（1〜5）の表示ラベル
 export const PRIORITY_LABELS: Record<number, string> = {
   1: '★1',
@@ -70,4 +73,22 @@ export interface Dashboard {
     companyName: string;
     companyId: number;
   }[];
+}
+
+export interface EsTemplate {
+  id: number;
+  category: EsCategory;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Stats {
+  total: number;
+  byStatus: { status: string; count: number }[];
+  byIndustry: { industry: string; count: number }[];
+  offers: number;
+  rejected: number;
+  active: number;
 }

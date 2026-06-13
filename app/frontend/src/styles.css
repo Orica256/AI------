@@ -455,6 +455,140 @@ button.danger {
   margin-top: 12px;
 }
 
+.list-header > button {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.es-form .primary {
+  margin-top: 4px;
+}
+
+.es-body-input {
+  min-height: 180px;
+}
+
+.es-template-list {
+  display: grid;
+  gap: 16px;
+}
+
+.es-template-card {
+  margin-bottom: 0;
+}
+
+.es-template-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.es-template-head h3 {
+  margin: 8px 0 0;
+}
+
+.es-template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.es-template-actions button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.es-template-body {
+  margin: 14px 0 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  line-height: 1.7;
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  margin-bottom: 0;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--primary);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.stat-bars {
+  display: grid;
+  gap: 12px;
+}
+
+.stat-bar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-bar-label {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.stat-bar-fill {
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.stat-bar-fill.industry {
+  background: var(--accent);
+}
+
+.stat-bar-count {
+  text-align: right;
+  font-weight: bold;
+}
+
 /* カンバン */
 .kanban-board {
   display: grid;
@@ -621,6 +755,21 @@ button.danger {
 @media (max-width: 600px) {
   .status-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .stats-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .es-template-head {
+    flex-direction: column;
+  }
+  .es-template-actions {
+    justify-content: flex-start;
+  }
+  .stat-bar-row {
+    grid-template-columns: 1fr 44px;
+  }
+  .stat-bar-label {
+    grid-column: 1 / -1;
   }
   .form-row {
     flex-direction: column;
