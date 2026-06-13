@@ -44,7 +44,10 @@ export default function KanbanBoard({ onSelect }: Props) {
 
   return (
     <div className="kanban">
-      <div className="kanban-board">
+      <div
+        className="kanban-board"
+        style={{ gridTemplateColumns: `repeat(${STATUSES.length}, minmax(0, 1fr))` }}
+      >
         {STATUSES.map((status) => {
           const items = companies.filter((c) => c.status === status);
           return (

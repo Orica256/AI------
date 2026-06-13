@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, AllEvent } from '../api';
+import { api, AllEvent, AllTask } from '../api';
 import { Company } from '../types';
 
 interface Props {
@@ -7,7 +7,7 @@ interface Props {
 }
 
 interface DayItem {
-  kind: 'event' | 'deadline';
+  kind: 'event' | 'deadline' | 'task';
   label: string;
   companyId: number;
   companyName: string;
@@ -23,6 +23,7 @@ function ymd(d: Date): string {
 // 選考イベントと締切を月カレンダーで表示する
 export default function CalendarView({ onSelect }: Props) {
   const [events, setEvents] = useState<AllEvent[]>([]);
+  const [tasks, setTasks] = useState<AllTask[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState(() => {
@@ -32,6 +33,7 @@ export default function CalendarView({ onSelect }: Props) {
 
   useEffect(() => {
     api.listAllEvents().then(setEvents).catch((e) => setError(e.message));
+    api.listAllTasks().then(setTasks).catch(() => {});
     api.listCompanies().then(setCompanies).catch(() => {});
   }, []);
 
@@ -46,13 +48,16 @@ export default function CalendarView({ onSelect }: Props) {
     for (const e of events) {
       push(e.date, { kind: 'event', label: e.title, companyId: e.company_id, companyName: e.company_name });
     }
+    for (const t of tasks) {
+      push(t.due_date, { kind: 'task', label: t.title, companyId: t.company_id, companyName: t.company_name });
+    }
     for (const c of companies) {
       if (c.deadline) {
         push(c.deadline, { kind: 'deadline', label: '締切', companyId: c.id, companyName: c.name });
       }
     }
     return map;
-  }, [events, companies]);
+  }, [events, tasks, companies]);
 
   // カレンダーのマス（前月の余白含む6週分）
   const cells = useMemo(() => {
@@ -100,11 +105,11 @@ export default function CalendarView({ onSelect }: Props) {
                 {items.map((it, j) => (
                   <button
                     key={j}
-                    className={`cal-item ${it.kind === 'deadline' ? 'cal-deadline' : 'cal-event'}`}
+                    className={`cal-item cal-${it.kind}`}
                     onClick={() => onSelect(it.companyId)}
                     title={`${it.companyName}：${it.label}`}
                   >
-                    {it.kind === 'deadline' ? '⏰' : '📌'} {it.companyName}
+                    {it.kind === 'deadline' ? '⏰' : it.kind === 'task' ? '✅' : '📌'} {it.companyName}
                   </button>
                 ))}
               </div>
@@ -112,7 +117,7 @@ export default function CalendarView({ onSelect }: Props) {
           );
         })}
       </div>
-      <p className="hint">📌 選考イベント / ⏰ 企業の締切。クリックでその企業の詳細へ移動します。</p>
+      <p className="hint">📌 選考イベント / ⏰ 企業の締切 / ✅ ToDoの期日。クリックでその企業の詳細へ移動します。</p>
     </div>
   );
 }

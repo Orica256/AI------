@@ -19,6 +19,16 @@ export interface AllEvent {
   company_name: string;
 }
 
+// 期日付き全ToDo（カレンダー用・企業名付き）
+export interface AllTask {
+  id: number;
+  company_id: number;
+  title: string;
+  due_date: string;
+  done: number;
+  company_name: string;
+}
+
 // Viteプロキシ経由で /api をバックエンド(3001)へ転送
 const BASE = '/api';
 
@@ -65,6 +75,9 @@ export const api = {
 
   // カレンダー用：全イベント（企業名付き）
   listAllEvents: () => request<AllEvent[]>('/events'),
+
+  // カレンダー用：期日付き全ToDo（企業名付き）
+  listAllTasks: () => request<AllTask[]>('/tasks'),
 
   // ToDo（タスク）
   addTask: (companyId: number, data: { title: string; due_date?: string | null }) =>
