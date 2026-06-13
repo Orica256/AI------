@@ -66,6 +66,23 @@ Step 'PUT /api/companies/:id（更新）' {
   Invoke-RestMethod -Uri "$BaseUrl/api/companies/$script:createdId" -Method Put -Body $body -ContentType 'application/json; charset=utf-8' | Out-Null
 }
 
+Step 'POST /api/companies/:id/tasks（ToDo・期日あり）' {
+  $body = @{ title = 'ES提出'; due_date = '2026-07-05' } | ConvertTo-Json
+  $t = Invoke-RestMethod -Uri "$BaseUrl/api/companies/$script:createdId/tasks" -Method Post -Body $body -ContentType 'application/json; charset=utf-8'
+  if ($t.due_date -ne '2026-07-05') { throw 'due_date が保存されない' }
+}
+
+Step 'POST /api/companies/:id/tasks（ToDo・期日なし）' {
+  $body = @{ title = '説明会の予約' } | ConvertTo-Json
+  $t = Invoke-RestMethod -Uri "$BaseUrl/api/companies/$script:createdId/tasks" -Method Post -Body $body -ContentType 'application/json; charset=utf-8'
+  if ($null -ne $t.due_date) { throw '期日なしが null でない' }
+}
+
+Step 'GET /api/companies/:id（tasks 2件・due_date確認）' {
+  $d = Invoke-RestMethod -Uri "$BaseUrl/api/companies/$script:createdId" -Method Get
+  if ($d.tasks.Count -lt 2) { throw 'tasks が2件未満' }
+}
+
 Step 'GET /api/dashboard' {
   $dash = Invoke-RestMethod -Uri "$BaseUrl/api/dashboard" -Method Get
   if ($null -eq $dash.total) { throw 'total が欠落' }
