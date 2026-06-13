@@ -59,3 +59,12 @@ curl http://localhost:3001/api/dashboard
 - `POST /api/import` … JSONを受け取り全置換（トランザクション）。body: `{ companies[], events[], tasks[] }`。
 > tasksテーブル：id, company_id, title, done, due_date, created_at。companies削除時に CASCADE。
 > （既存DBは起動時に `due_date` を冪等マイグレーションで自動追加。）
+
+## 第8サイクル 追加API（2026-06-13）
+- `GET /api/es-templates` - ESテンプレート一覧。`updated_at` 降順。
+- `POST /api/es-templates` - ESテンプレート作成。body: `{ category, title, body }`。`title` 必須、`category` は `自己PR/志望動機/ガクチカ/長所・短所/逆質問`。
+- `PUT /api/es-templates/:id` - ESテンプレート更新。body: `{ category?, title?, body? }`。
+- `DELETE /api/es-templates/:id` - ESテンプレート削除。戻り値: `{ ok: true }`。
+- `GET /api/stats` - 統計取得。`total/byStatus/byIndustry/offers/rejected/active` を返す。`byStatus` は全ステータスを0件でも含める。
+- `GET /api/export` - `version: 2` とし、`esTemplates` を含める。
+- `POST /api/import` - `esTemplates` が配列なら `es_templates` を全置換して取り込む。未指定なら既存ESテンプレートは保持する。

@@ -1,6 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
-import { db, STATUSES, type Status } from './db.js';
+import { db, ES_CATEGORIES, STATUSES, type EsCategory, type Status } from './db.js';
 
 const app = express();
 const PORT = 3001;
@@ -11,6 +11,9 @@ app.use(express.json());
 // ---- バリデーション補助 ----
 const isStatus = (v: unknown): v is Status =>
   typeof v === 'string' && (STATUSES as readonly string[]).includes(v);
+
+const isEsCategory = (v: unknown): v is EsCategory =>
+  typeof v === 'string' && (ES_CATEGORIES as readonly string[]).includes(v);
 
 const isDateStr = (v: unknown): boolean =>
   v === null || v === undefined || v === '' || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v));
@@ -197,6 +200,77 @@ app.delete('/api/tasks/:id', (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+// ---- ESテンプレート：一覧 ----
+app.get('/api/es-templates', (_req: Request, res: Response) => {
+  const rows = db.prepare('SELECT * FROM es_templates ORDER BY updated_at DESC').all();
+  res.json(rows);
+});
+
+// ---- ESテンプレート：作成 ----
+app.post('/api/es-templates', (req: Request, res: Response) => {
+  const { category, title, body } = req.body ?? {};
+  if (!isEsCategory(category))
+    return res.status(400).json({ error: '不正なカテゴリです' });
+  if (typeof title !== 'string' || title.trim() === '')
+    return res.status(400).json({ error: 'タイトルは必須です' });
+  if (body !== undefined && typeof body !== 'string')
+    return res.status(400).json({ error: '本文は文字列で入力してください' });
+
+  const now = new Date().toISOString();
+  const info = db
+    .prepare(`
+      INSERT INTO es_templates (category, title, body, created_at, updated_at)
+      VALUES (@category, @title, @body, @created_at, @updated_at)
+    `)
+    .run({
+      category,
+      title: title.trim(),
+      body: body ?? '',
+      created_at: now,
+      updated_at: now,
+    });
+  const created = db.prepare('SELECT * FROM es_templates WHERE id = ?').get(info.lastInsertRowid);
+  res.status(201).json(created);
+});
+
+// ---- ESテンプレート：更新 ----
+app.put('/api/es-templates/:id', (req: Request, res: Response) => {
+  const existing = db.prepare('SELECT * FROM es_templates WHERE id = ?').get(req.params.id) as any;
+  if (!existing) return res.status(404).json({ error: 'ESテンプレートが見つかりません' });
+
+  const { category, title, body } = req.body ?? {};
+  if (category !== undefined && !isEsCategory(category))
+    return res.status(400).json({ error: '不正なカテゴリです' });
+  if (title !== undefined && (typeof title !== 'string' || title.trim() === ''))
+    return res.status(400).json({ error: 'タイトルは必須です' });
+  if (body !== undefined && typeof body !== 'string')
+    return res.status(400).json({ error: '本文は文字列で入力してください' });
+
+  db.prepare(`
+    UPDATE es_templates SET
+      category = @category,
+      title = @title,
+      body = @body,
+      updated_at = @updated_at
+    WHERE id = @id
+  `).run({
+    id: req.params.id,
+    category: category !== undefined ? category : existing.category,
+    title: title !== undefined ? title.trim() : existing.title,
+    body: body !== undefined ? body : existing.body,
+    updated_at: new Date().toISOString(),
+  });
+  const updated = db.prepare('SELECT * FROM es_templates WHERE id = ?').get(req.params.id);
+  res.json(updated);
+});
+
+// ---- ESテンプレート：削除 ----
+app.delete('/api/es-templates/:id', (req: Request, res: Response) => {
+  const info = db.prepare('DELETE FROM es_templates WHERE id = ?').run(req.params.id);
+  if (info.changes === 0) return res.status(404).json({ error: 'ESテンプレートが見つかりません' });
+  res.json({ ok: true });
+});
+
 // ---- イベント：全件（カレンダー用・企業名付き） ----
 app.get('/api/events', (_req: Request, res: Response) => {
   const rows = db.prepare(`
@@ -254,26 +328,57 @@ app.get('/api/dashboard', (_req: Request, res: Response) => {
   res.json({ total: total.c, byStatus, upcomingDeadlines, upcomingEvents });
 });
 
+// ---- 統計 ----
+app.get('/api/stats', (_req: Request, res: Response) => {
+  const statusRows = db
+    .prepare('SELECT status, COUNT(*) AS count FROM companies GROUP BY status')
+    .all() as { status: string; count: number }[];
+  const countByStatus = new Map(statusRows.map((row) => [row.status, row.count]));
+  const byStatus = STATUSES.map((status) => ({
+    status,
+    count: countByStatus.get(status) ?? 0,
+  }));
+
+  const byIndustry = db
+    .prepare(`
+      SELECT COALESCE(NULLIF(TRIM(industry), ''), '未設定') AS industry, COUNT(*) AS count
+      FROM companies
+      GROUP BY COALESCE(NULLIF(TRIM(industry), ''), '未設定')
+      ORDER BY count DESC, industry ASC
+    `)
+    .all() as { industry: string; count: number }[];
+
+  const total = byStatus.reduce((sum, row) => sum + row.count, 0);
+  const offers = countByStatus.get(STATUSES[9]) ?? 0;
+  const rejected = countByStatus.get(STATUSES[10]) ?? 0;
+  const active = total - offers - rejected;
+
+  res.json({ total, byStatus, byIndustry, offers, rejected, active });
+});
+
 // ---- データ：エクスポート（ローカルJSONバックアップ） ----
 app.get('/api/export', (_req: Request, res: Response) => {
   const companies = db.prepare('SELECT * FROM companies ORDER BY id ASC').all();
   const events = db.prepare('SELECT * FROM events ORDER BY id ASC').all();
   const tasks = db.prepare('SELECT * FROM tasks ORDER BY id ASC').all();
-  res.json({ version: 1, exportedAt: new Date().toISOString(), companies, events, tasks });
+  const esTemplates = db.prepare('SELECT * FROM es_templates ORDER BY id ASC').all();
+  res.json({ version: 2, exportedAt: new Date().toISOString(), companies, events, tasks, esTemplates });
 });
 
 // ---- データ：インポート（全置換・トランザクション） ----
 app.post('/api/import', (req: Request, res: Response) => {
-  const { companies, events, tasks } = req.body ?? {};
+  const { companies, events, tasks, esTemplates } = req.body ?? {};
   if (!Array.isArray(companies) || !Array.isArray(events))
     return res.status(400).json({ error: 'companies と events の配列が必要です' });
   const taskRows = Array.isArray(tasks) ? tasks : [];
+  const esTemplateRows = Array.isArray(esTemplates) ? esTemplates : null;
   try {
     const tx = db.transaction(() => {
       // 子テーブルから削除（FK整合）
       db.prepare('DELETE FROM tasks').run();
       db.prepare('DELETE FROM events').run();
       db.prepare('DELETE FROM companies').run();
+      if (esTemplateRows) db.prepare('DELETE FROM es_templates').run();
 
       const insC = db.prepare(`
         INSERT INTO companies (id, name, industry, status, priority, applied_date, deadline, memo, created_at, updated_at)
@@ -318,6 +423,27 @@ app.post('/api/import', (req: Request, res: Response) => {
           due_date: t?.due_date ?? null,
           created_at: t?.created_at ?? new Date().toISOString(),
         });
+      }
+
+      if (esTemplateRows) {
+        const insEs = db.prepare(`
+          INSERT INTO es_templates (id, category, title, body, created_at, updated_at)
+          VALUES (@id, @category, @title, @body, @created_at, @updated_at)
+        `);
+        for (const t of esTemplateRows) {
+          if (!isEsCategory(t?.category)) throw new Error('ESテンプレートのカテゴリが不正です');
+          if (typeof t?.title !== 'string' || t.title.trim() === '')
+            throw new Error('ESテンプレートのタイトルは必須です');
+          const now = new Date().toISOString();
+          insEs.run({
+            id: t.id ?? null,
+            category: t.category,
+            title: t.title.trim(),
+            body: typeof t.body === 'string' ? t.body : '',
+            created_at: t.created_at ?? now,
+            updated_at: t.updated_at ?? now,
+          });
+        }
       }
     });
     tx();

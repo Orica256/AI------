@@ -30,6 +30,9 @@ export const STATUSES = [
 ] as const;
 export type Status = (typeof STATUSES)[number];
 
+export const ES_CATEGORIES = ['自己PR', '志望動機', 'ガクチカ', '長所・短所', '逆質問'] as const;
+export type EsCategory = (typeof ES_CATEGORIES)[number];
+
 // スキーマ初期化
 db.exec(`
   CREATE TABLE IF NOT EXISTS companies (
@@ -62,6 +65,15 @@ db.exec(`
     due_date   TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS es_templates (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    category   TEXT NOT NULL,
+    title      TEXT NOT NULL,
+    body       TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
   );
 `);
 
