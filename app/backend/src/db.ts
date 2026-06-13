@@ -56,10 +56,17 @@ db.exec(`
     company_id INTEGER NOT NULL,
     title      TEXT NOT NULL,
     done       INTEGER NOT NULL DEFAULT 0,
+    due_date   TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
   );
 `);
+
+// 既存DB向けの冪等マイグレーション（tasks.due_date が無ければ追加）
+const taskCols = db.prepare('PRAGMA table_info(tasks)').all() as { name: string }[];
+if (!taskCols.some((c) => c.name === 'due_date')) {
+  db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT');
+}
 
 // 初回のみサンプルデータを投入（使い方の例示）
 const count = db.prepare('SELECT COUNT(*) AS c FROM companies').get() as { c: number };

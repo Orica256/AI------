@@ -159,12 +159,14 @@ app.delete('/api/events/:id', (req: Request, res: Response) => {
 app.post('/api/companies/:id/tasks', (req: Request, res: Response) => {
   const company = db.prepare('SELECT id FROM companies WHERE id = ?').get(req.params.id);
   if (!company) return res.status(404).json({ error: '企業が見つかりません' });
-  const { title } = req.body ?? {};
+  const { title, due_date } = req.body ?? {};
   if (typeof title !== 'string' || title.trim() === '')
     return res.status(400).json({ error: 'タスク名は必須です' });
+  if (!isDateStr(due_date))
+    return res.status(400).json({ error: '期日はYYYY-MM-DD形式で入力してください' });
   const info = db
-    .prepare('INSERT INTO tasks (company_id, title, done, created_at) VALUES (?, ?, 0, ?)')
-    .run(req.params.id, title.trim(), new Date().toISOString());
+    .prepare('INSERT INTO tasks (company_id, title, done, due_date, created_at) VALUES (?, ?, 0, ?, ?)')
+    .run(req.params.id, title.trim(), due_date || null, new Date().toISOString());
   const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(info.lastInsertRowid);
   res.status(201).json(created);
 });
@@ -173,12 +175,15 @@ app.post('/api/companies/:id/tasks', (req: Request, res: Response) => {
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id) as any;
   if (!existing) return res.status(404).json({ error: 'タスクが見つかりません' });
-  const { title, done } = req.body ?? {};
+  const { title, done, due_date } = req.body ?? {};
   if (title !== undefined && (typeof title !== 'string' || title.trim() === ''))
     return res.status(400).json({ error: 'タスク名は必須です' });
-  db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?').run(
+  if (due_date !== undefined && !isDateStr(due_date))
+    return res.status(400).json({ error: '期日はYYYY-MM-DD形式で入力してください' });
+  db.prepare('UPDATE tasks SET title = ?, done = ?, due_date = ? WHERE id = ?').run(
     title !== undefined ? title.trim() : existing.title,
     done !== undefined ? (done ? 1 : 0) : existing.done,
+    due_date !== undefined ? due_date || null : existing.due_date,
     req.params.id
   );
   const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
@@ -292,13 +297,14 @@ app.post('/api/import', (req: Request, res: Response) => {
         });
       }
 
-      const insT = db.prepare('INSERT INTO tasks (id, company_id, title, done, created_at) VALUES (@id, @company_id, @title, @done, @created_at)');
+      const insT = db.prepare('INSERT INTO tasks (id, company_id, title, done, due_date, created_at) VALUES (@id, @company_id, @title, @done, @due_date, @created_at)');
       for (const t of taskRows) {
         insT.run({
           id: t?.id ?? null,
           company_id: Number(t?.company_id),
           title: String(t?.title ?? ''),
           done: t?.done ? 1 : 0,
+          due_date: t?.due_date ?? null,
           created_at: t?.created_at ?? new Date().toISOString(),
         });
       }
