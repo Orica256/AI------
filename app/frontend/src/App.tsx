@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import { Dashboard } from './components/Dashboard';
 import { CompanyList } from './components/CompanyList';
@@ -16,6 +16,15 @@ type View =
 export function App() {
   const [view, setView] = useState<View>({ name: 'dashboard' });
   const fileRef = useRef<HTMLInputElement>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    () => (localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'),
+  );
+
+  // テーマを html 要素に反映し、localStorage に保持する
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   async function handleExport() {
     try {
@@ -78,6 +87,9 @@ export function App() {
           </button>
         </nav>
         <div className="header-actions">
+          <button onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>
+            {theme === 'dark' ? '☀️ ライト' : '🌙 ダーク'}
+          </button>
           <button onClick={handleExport}>エクスポート</button>
           <button onClick={() => fileRef.current?.click()}>インポート</button>
           <input

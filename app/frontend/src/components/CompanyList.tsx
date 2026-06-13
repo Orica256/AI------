@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { STATUSES, type Company, type Status } from '../types';
 import DeadlineBadge from './DeadlineBadge';
+import { daysUntil } from '../utils/deadline';
+
+type SortKey = 'default' | 'deadline' | 'priority';
 
 interface Props {
   onOpenCompany: (id: number) => void;
@@ -20,6 +23,8 @@ const emptyForm = {
 export function CompanyList({ onOpenCompany }: Props) {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filter, setFilter] = useState<string>('');
+  const [keyword, setKeyword] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('default');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,26 @@ export function CompanyList({ onOpenCompany }: Props) {
       setError((err as Error).message);
     }
   };
+
+  // 検索（企業名・業界の部分一致）と並べ替えはクライアント側で適用する
+  const visible = companies
+    .filter((c) => {
+      const k = keyword.trim().toLowerCase();
+      if (!k) return true;
+      return c.name.toLowerCase().includes(k) || (c.industry ?? '').toLowerCase().includes(k);
+    })
+    .sort((a, b) => {
+      if (sortKey === 'priority') return b.priority - a.priority;
+      if (sortKey === 'deadline') {
+        const da = daysUntil(a.deadline);
+        const db = daysUntil(b.deadline);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1; // 締切なしは末尾
+        if (db === null) return -1;
+        return da - db; // 残日数が小さい（＝近い／超過）ほど先頭
+      }
+      return 0;
+    });
 
   return (
     <div>
@@ -146,7 +171,22 @@ export function CompanyList({ onOpenCompany }: Props) {
         ))}
       </div>
 
-      {companies.length === 0 ? (
+      <div className="toolbar">
+        <input
+          className="search"
+          type="search"
+          placeholder="🔍 企業名・業界で検索"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+        <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
+          <option value="default">並び順：デフォルト</option>
+          <option value="deadline">締切が近い順</option>
+          <option value="priority">志望度が高い順</option>
+        </select>
+      </div>
+
+      {visible.length === 0 ? (
         <p className="empty">該当する企業がありません。</p>
       ) : (
         <table className="table">
@@ -161,7 +201,7 @@ export function CompanyList({ onOpenCompany }: Props) {
             </tr>
           </thead>
           <tbody>
-            {companies.map((c) => (
+            {visible.map((c) => (
               <tr key={c.id} onClick={() => onOpenCompany(c.id)} className="clickable">
                 <td>{c.name}</td>
                 <td>{c.industry || '-'}</td>

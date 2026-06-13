@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { STATUSES, type CompanyDetail as CompanyDetailData, type Status } from '../types';
+import SimpleMarkdown from './SimpleMarkdown';
 
 interface Props {
   id: number;
@@ -210,7 +211,9 @@ export function CompanyDetail({ id, onBack }: Props) {
             <dt>締切</dt>
             <dd>{company.deadline || '-'}</dd>
             <dt>メモ</dt>
-            <dd className="memo">{company.memo || '-'}</dd>
+            <dd className="memo">
+              {company.memo ? <SimpleMarkdown text={company.memo} /> : '-'}
+            </dd>
           </dl>
         </div>
       )}
